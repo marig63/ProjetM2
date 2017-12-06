@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="@color/colorPop">
+
+    <TextView
+        android:id="@+id/nearest"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/button9"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginHorizontal="10dp"
+            android:layout_marginVertical="10dp"
+            android:layout_weight="1"
+            android:background="?android:attr/selectableItemBackground"
+            app:layout_anchor="@+id/include"
+            app:layout_anchorGravity="right|top"
+            tools:layout_editor_absoluteX="1dp" />
+
+        <Button
+            android:id="@+id/button5"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginHorizontal="10dp"
+            android:layout_marginVertical="10dp"
+            android:background="@drawable/ic_group"
+            android:onClick="createGroup"
+            app:layout_anchor="@+id/include"
+            app:layout_anchorGravity="right|top"
+            tools:layout_editor_absoluteX="1dp" />
+
+        <Button
+            android:id="@+id/button11"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginHorizontal="10dp"
+            android:layout_marginVertical="10dp"
+            android:background="@drawable/ic_joingroup"
+            android:baselineAligned="false"
+            app:layout_anchor="@+id/include"
+            app:layout_anchorGravity="left|top"
+            tools:layout_editor_absoluteX="1dp" />
+
+        <Button
+            android:id="@+id/button7"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginHorizontal="10dp"
+            android:layout_marginVertical="10dp"
+            android:background="@drawable/ic_addgroup"
+            android:baselineAligned="false"
+            android:onClick="addMember"
+            app:layout_anchor="@+id/include"
+            app:layout_anchorGravity="left|top"
+            tools:layout_editor_absoluteX="1dp" />
+
+        <Button
+            android:id="@+id/button10"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginHorizontal="10dp"
+            android:layout_marginVertical="10dp"
+            android:layout_weight="1"
+            android:background="?android:attr/actionBarItemBackground"
+            app:layout_anchor="@+id/include"
+            app:layout_anchorGravity="right|top"
+            tools:layout_editor_absoluteX="1dp" />
+    </LinearLayout>
+</RelativeLayout>
