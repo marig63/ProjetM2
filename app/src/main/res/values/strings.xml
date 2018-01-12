@@ -5,4 +5,8 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="action_settings">Settings</string>
+    <string name="default_name">Jean Bon</string>
+    <string name="group_name">Groupe-Here</string>
+    <string name="user_name_key"></string>
+    <string name="user_name"></string>
 </resources>

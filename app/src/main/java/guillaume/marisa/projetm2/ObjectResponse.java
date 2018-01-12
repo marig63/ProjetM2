@@ -10,27 +10,27 @@ import android.os.Parcelable;
 public class ObjectResponse implements Parcelable {
     private final String name;
     private final int id;
-    private final String admin;
+    private final String role;
     private final double lat;
     private final double lon;
-    private final String zone;
+    private final String ok;
 
-    public ObjectResponse(String name, int id, String admin,double lat, double lon, String zone) {
+    public ObjectResponse(String name, int id, String role,double lat, double lon, String ok) {
         this.name = name;
         this.id = id;
-        this.admin = admin;
+        this.role = role;
         this.lat = lat;
         this.lon = lon;
-        this.zone = zone;
+        this.ok = ok;
     }
 
     protected ObjectResponse(Parcel in) {
         name = in.readString();
         id = in.readInt();
-        admin = in.readString();
+        role = in.readString();
         lat = in.readDouble();
         lon = in.readDouble();
-        zone = in.readString();
+        ok = in.readString();
     }
 
     public static final Creator<ObjectResponse> CREATOR = new Creator<ObjectResponse>() {
@@ -53,16 +53,16 @@ public class ObjectResponse implements Parcelable {
         return id;
     }
 
-    public String admin() {
-        return admin;
+    public String role() {
+        return role;
     }
 
     public double lat(){ return lat;}
 
     public double lon(){return  lon;}
 
-    public String zone() {
-        return zone;
+    public String ok() {
+        return ok;
     }
 
     @Override
@@ -74,9 +74,9 @@ public class ObjectResponse implements Parcelable {
     public void writeToParcel(Parcel parcel, int i) {
         parcel.writeString(name);
         parcel.writeInt(id);
-        parcel.writeString(admin);
+        parcel.writeString(role);
         parcel.writeDouble(lat);
         parcel.writeDouble(lon);
-        parcel.writeString(zone);
+        parcel.writeString(ok);
     }
 }

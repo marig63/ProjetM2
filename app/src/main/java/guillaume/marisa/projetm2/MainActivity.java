@@ -19,6 +19,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdate;
@@ -30,6 +31,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONArray;
@@ -51,6 +53,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import guillaume.marisa.projetm2.thread.ThreadSignal;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -67,13 +70,15 @@ public class MainActivity extends AppCompatActivity
     static GoogleMap map;
     static NavigationView navigationView;
     static boolean mapReady = false;
+    static boolean inGroup = false;
     //Data data = new Data();
     RequestManager requestManager = new RequestManager();
-    private BluetoothAdapter mBtAdapter;
-    private String myName = "MonNom";
+    static BluetoothAdapter mBtAdapter;
+    private String myName = "";
     private String myAdrMac;
-
+    private boolean showTiquette = false;
     private Timer myTimer;
+    private ArrayList<Bluetooth> detected;
 
 
 
@@ -85,8 +90,18 @@ public class MainActivity extends AppCompatActivity
         //Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         //setSupportActionBar(toolbar);
 
+        TextView bar_name = (TextView) findViewById(R.id.bar_name);
+
+        Bundle b = getIntent().getExtras();
+        if(b != null) {
+            myName = b.getString("name");
+            //bar_name.setText(myName);
+        }
+
+
 
         Popup.requestManager = requestManager;
+        detected = new ArrayList<>();
 
         //if(data.list == null){
          //   data.list = new ArrayList<>();
@@ -126,6 +141,8 @@ public class MainActivity extends AppCompatActivity
 
                 LatLng montB = new LatLng(47.495248,6.802616);
 
+                googleMap.getUiSettings().setMapToolbarEnabled(false);
+
 
                 CircleOptions circleOptions = new CircleOptions();
                 circleOptions.center(montB);
@@ -155,7 +172,7 @@ public class MainActivity extends AppCompatActivity
         registerReceiver(mReceiver, filter2);
 
         mBtAdapter = BluetoothAdapter.getDefaultAdapter();
-        mBtAdapter.startDiscovery();
+        startBluetooth();
 
         requestManager.init(myName,myAdrMac);
 
@@ -165,7 +182,6 @@ public class MainActivity extends AppCompatActivity
         }
         updateMenu();
 
-
         myTimer = new Timer();
         myTimer.schedule(new TimerTask() {
             @Override
@@ -173,8 +189,14 @@ public class MainActivity extends AppCompatActivity
                 TimerMethod();
             }
 
-        }, 0, 5000);
+        }, 1000, 3000);
 
+    }
+
+    static void startBluetooth(){
+        if(inGroup) {
+            mBtAdapter.startDiscovery();
+        }
     }
 
     private void TimerMethod()
@@ -192,11 +214,27 @@ public class MainActivity extends AppCompatActivity
     };
 
     public void refresh(){
-        boolean rdy = requestManager.update(myAdrMac);
-        //data.list = requestManager.list;
-        updateMenu();
-        showDataOnMap();
+        if(inGroup) {
+            //sendSignal();
+
+            boolean rdy = requestManager.update(myAdrMac,detected);
+            //detected.clear();
+            ////data.list = requestManager.list;
+            updateMenu();
+            showDataOnMap();
+        }
     }
+
+    /*public void sendSignal(){
+        for(Bluetooth bl : detected){
+
+            requestManager.requestSignal(bl.deviceName,bl.hardwareAdress,bl.signal);
+            System.out.println("sent");
+        }
+
+        detected.clear();
+        System.out.println("resquestSinal clearing!");
+    }*/
 
     // Create a BroadcastReceiver for ACTION_FOUND.
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -211,10 +249,15 @@ public class MainActivity extends AppCompatActivity
                 int bs = intent.getShortExtra(device.EXTRA_RSSI,Short.MIN_VALUE);
 
                 System.out.println(deviceName +" ||| " + deviceHardwareAddress + " ||| " + bs);
+                detected.add(new Bluetooth(deviceName,deviceHardwareAddress,""+bs));
+                //requestManager.requestSignal(deviceName,deviceHardwareAddress,""+bs);
 
-                if(bs>-45){
+                if(bs>-50){ // device addable to group
                     Popup.showText(deviceName +" ||| " + deviceHardwareAddress);
                 }
+
+
+
             }
             else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action))
             {
@@ -232,13 +275,36 @@ public class MainActivity extends AppCompatActivity
     public void showDataOnMap(){
 
         map.clear();
-        for(Individu i : requestManager.list) {
-            if(i.accomp) {
-                map.addMarker(new MarkerOptions().position(i.latLng).title(i.nom).icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_acc)));
+        int index = 0;
+        for(MapElement i : requestManager.list) {
+            Marker marker;
+            if(i.getClass() == Admin.class) {
+                Admin tmp = (Admin) requestManager.list.get(index);
+                marker = map.addMarker(new MarkerOptions().position(tmp.latLng).title(tmp.nom).icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_acc)));
+
             }
-            else{
-                map.addMarker(new MarkerOptions().position(i.latLng).title(i.nom).icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_dev)));
+            else if(i.getClass() == Member.class) {
+                Member tmp = (Member) requestManager.list.get(index);
+                marker = map.addMarker(new MarkerOptions().position(tmp.latLng).title(tmp.nom).icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_acc)));
+
             }
+            else if(i.getClass() == Ble.class) {
+                Ble tmp = (Ble) requestManager.list.get(index);
+                marker = map.addMarker(new MarkerOptions().position(tmp.latLng).title(tmp.nom).icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_dev)));
+
+            }
+            else if(i.getClass() == Ping.class) {
+                Ping tmp = (Ping) requestManager.list.get(index);
+                marker = map.addMarker(new MarkerOptions().position(tmp.latLng).title(tmp.time));
+
+            }
+
+            /*if(showTiquette){
+                if(marker != null) {
+                    marker.showInfoWindow();
+                }
+            }*/
+            index++;
         }
     }
 
@@ -246,13 +312,29 @@ public class MainActivity extends AppCompatActivity
         Menu menu = navigationView.getMenu();
         menu.clear();
 
+        TextView bar_nam = (TextView) findViewById(R.id.bar_name);
+        if(bar_nam != null) {
+            bar_nam.setText(myName);
+        }
+
+
         int ind = 0;
-        for(Individu i : requestManager.list) {
-            if(i.accomp) {
-                menu.add(R.id.groupAcc, ind, Menu.NONE, i.nom).setIcon(R.drawable.ic_holo_acc);
+        for(MapElement i : requestManager.list) {
+            if(i.getClass() == Admin.class) {
+                Admin tmp = (Admin) requestManager.list.get(ind);
+                menu.add(R.id.groupAcc, ind, Menu.NONE, tmp.nom).setIcon(R.drawable.ic_holo_acc);
             }
-            else{
-                menu.add(R.id.groupDev, ind, Menu.NONE, i.nom).setIcon(R.drawable.ic_holo_dev);
+            else if(i.getClass() == Member.class) {
+                Member tmp = (Member) requestManager.list.get(ind);
+                menu.add(R.id.groupDev, ind, Menu.NONE, tmp.nom).setIcon(R.drawable.ic_holo_acc);
+            }
+            else if(i.getClass() == Ble.class) {
+                Ble tmp = (Ble) requestManager.list.get(ind);
+                menu.add(R.id.groupDev, ind, Menu.NONE, tmp.nom).setIcon(R.drawable.ic_holo_dev);
+            }
+            else if(i.getClass() == Ping.class) {
+                Ping tmp = (Ping) requestManager.list.get(ind);
+                menu.add(R.id.groupDev, ind, Menu.NONE, tmp.time).setIcon(R.drawable.ic_clock);
             }
             ind++;
         }
@@ -272,6 +354,7 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
+
         return true;
     }
 
@@ -296,9 +379,32 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        // move camera to selected item
-        map.moveCamera(CameraUpdateFactory.newLatLng(requestManager.list.get(id).latLng));
-        map.animateCamera(CameraUpdateFactory.zoomTo(16));
+        if(requestManager.list.get(id).getClass() == Admin.class) {
+            Admin tmp = (Admin) requestManager.list.get(id);
+            // move camera to selected item
+            map.moveCamera(CameraUpdateFactory.newLatLng(tmp.latLng));
+            //map.animateCamera(CameraUpdateFactory.zoomTo(16));
+        }
+        else if(requestManager.list.get(id).getClass() == Member.class) {
+            Member tmp = (Member) requestManager.list.get(id);
+            // move camera to selected item
+            map.moveCamera(CameraUpdateFactory.newLatLng(tmp.latLng));
+            //map.animateCamera(CameraUpdateFactory.zoomTo(16));
+        }
+        else if(requestManager.list.get(id).getClass() == Ble.class) {
+            Ble tmp = (Ble) requestManager.list.get(id);
+            // move camera to selected item
+            map.moveCamera(CameraUpdateFactory.newLatLng(tmp.latLng));
+            //map.animateCamera(CameraUpdateFactory.zoomTo(16));
+        }
+        else if(requestManager.list.get(id).getClass() == Ping.class) {
+            Ping tmp = (Ping) requestManager.list.get(id);
+            // move camera to selected item
+            map.moveCamera(CameraUpdateFactory.newLatLng(tmp.latLng));
+            //map.animateCamera(CameraUpdateFactory.zoomTo(16));
+        }
+
+
 
 
 
@@ -321,28 +427,10 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    public void showTitle(View v){
 
+        this.showTiquette = !this.showTiquette;
 
-
-    /*public String readJson(String name) throws IOException {
-        InputStream is = this.getAssets().open(name);
-        int size = is.available();
-        byte[] buffer = new byte[size];
-        is.read(buffer);
-        is.close();
-        String json = new String(buffer, "UTF-8");
-
-        return json;
     }
 
-
-    public void parseJsonFile(String jsonFile) throws JSONException {
-
-        JSONArray jsonArray = new JSONArray(jsonFile);
-        for(int i=0;i<jsonArray.length();i++){
-            //listAge.add(jsonArray.getJSONObject(i));
-            //
-        }
-
-    }*/
 }

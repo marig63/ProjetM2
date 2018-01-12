@@ -1,6 +1,8 @@
 package guillaume.marisa.projetm2;
 
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.DisplayMetrics;
@@ -28,6 +30,7 @@ public class Popup extends Activity {
 
     static TextView nearest;
     static RequestManager requestManager;
+    static final int RESULT_CODE_BLUETOOTH= 12;
 
 
     @Override
@@ -61,6 +64,37 @@ public class Popup extends Activity {
 
     public void createGroup(View v){
         requestManager.createGroup("Le groupe des chauves","11:22:33");
+    }
+
+    public void joinGroup(View v){
+        MainActivity.inGroup = true;
+        if(!MainActivity.mBtAdapter.isEnabled())
+        {
+            Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            //discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
+            startActivityForResult(discoverableIntent,RESULT_CODE_BLUETOOTH);
+        }
+        else {
+            MainActivity.startBluetooth();
+            this.finish();
+        }
+
+    }
+
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        if (requestCode == RESULT_CODE_BLUETOOTH) {
+
+            if (resultCode == RESULT_OK) {
+                MainActivity.startBluetooth();
+
+            }
+        }
+
+        this.finish();
     }
 
 
